@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==============================================
-# Brave 浏览器一键安装脚本 (记得把一开始的#给弄掉、备用连接: https://raw.githubusercontent.com/1224HuangJin/.sh/main/brave-zh.sh 和 https://is.gd/bravesh)
+# Brave 浏览器一键安装脚本 (记得把一开始的#给弄掉、备用连接: https://raw.githubusercontent.com/1224HuangJin/.sh/main/brave/zh.sh 和 https://is.gd/bravesh)
 # 快速运行方法：
 # bash <(wget -qO- https://is.gd/bravezh)
 # 或下载后执行：
@@ -137,7 +137,7 @@ cat > ~/.local/share/applications/brave-browser-cn.desktop <<EOF
 Version=1.0
 Name=$launcher_name
 Name[zh_CN]=$launcher_name
-Comment=使用中文语言启动 Brave 浏览器 (来自→ https://github.com/1224HuangJin/.sh/blob/main/brave-zh.sh )
+Comment=使用中文语言启动 Brave 浏览器 (来自→ https://github.com/1224HuangJin/.sh/blob/main/brave/zh.sh )
 Exec=$exec_line
 Icon=brave-browser
 Terminal=false
