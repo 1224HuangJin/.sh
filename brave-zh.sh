@@ -37,8 +37,32 @@ fi
 
 # ====== 欢迎界面 ======
 echo "👋 欢迎使用 Brave 浏览器安装脚本！"
+# ====== 欢迎界面 ======
+echo "👋 嘿！欢迎使用 Brave 浏览器安装脚本，准备开启安全快跑模式了吗？^_^"
 echo
-
+echo "先跟你聊聊 Brave 浏览器的小秘密："
+echo "🦁 优点："
+echo " - 自带广告拦截，隐私保护很强"
+echo " - 基于 Chromium，兼容扩展和网页"
+echo " - 比 Chrome 更省内存"
+echo " - 后台进程更少，看着更清爽"
+echo
+echo "⚠️ 小瑕疵："
+echo " - 有些网站/扩展偶尔卡顿"
+echo " - 隐私设置严格，得手动调权限"
+echo " - 玩 GeforceNow 时 ESC 会直接退出全屏"
+echo " - 玩 CrazyGames 时可能卡顿"
+echo
+echo "🔒 特别功能：内置 Tor VPN"
+echo " - 可以访问被限制的网站"
+echo " - 支持暗网（⚠️ 不建议乱尝试）"
+echo " - 用法：≡ → 新建 Tor 隐私窗口 (Shift+Alt+N)"
+echo " - 缺点：速度慢，不稳定"
+echo " - 想要更安全的，还是 Tor 官方浏览器更靠谱"
+echo " - 关于Tor的文档：https://support.brave.app/hc/zh-tw/articles/7816553516045"
+echo "如有问题请联系: 1224huangjin@gmail.com 或在 https://github.com/1224HuangJin/.sh/ 发送一个Issues"
+echo "（2025.09.07）"
+echo
 read -p "准备好安装 Brave 浏览器吗？(y/N): " confirm
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
   log_warn "好啦，下次再见！👋"
