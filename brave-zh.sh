@@ -1,11 +1,11 @@
 #!/bin/bash
 # ==============================================
 # Brave 浏览器一键安装脚本
-# 快速运行方法：
+# 快速运行方法(备用链接: https://raw.githubusercontent.com/1224HuangJin/.sh/main/brave-zh.sh )：
 # 1. 直接在终端执行：
-#    bash <(wget -qO- https://flx.qzz.io/b-zh)
+#    bash <(wget -qO- https://is.gd/bravesh)
 # 2. 或下载到本地然后执行：
-#    wget -O brave-zh.sh https://flx.qzz.io/b-zh
+#    wget -O brave-zh.sh https://is.gd/bravesh
 #    bash brave-zh.sh
 # ==============================================
 set -e
