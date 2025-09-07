@@ -58,7 +58,7 @@ echo " - 支持暗网（⚠️ 不建议乱尝试）"
 echo " - 用法：≡ → 新建 Tor 隐私窗口 (Shift+Alt+N)"
 echo " - 缺点：速度慢，不稳定"
 echo " - 想要更安全的，还是 Tor 官方浏览器更靠谱"
-echo " - 文档：https://support.brave.app/hc/zh-tw/articles/7816553516045"
+echo " - 关于Tor的文档：https://support.brave.app/hc/zh-tw/articles/7816553516045"
 echo "如有问题请联系: 1224huangjin@gmail.com 或在 https://github.com/1224HuangJin/.sh/ 发送一个Issues"
 echo
 
