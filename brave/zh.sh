@@ -1,10 +1,10 @@
 #!/bin/bash
 # ==============================================
-# Brave 浏览器一键安装脚本 (记得把一开始的#给弄掉、备用连接: https://raw.githubusercontent.com/1224HuangJin/.sh/main/brave/zh.sh 和 https://is.gd/bravesh)
+# Brave 浏览器一键安装脚本 (记得把一开始的#给弄掉、备用连接: https://raw.githubusercontent.com/1224HuangJin/.sh/main/brave/zh.sh)
 # 快速运行方法：
-# bash <(wget -qO- https://is.gd/bravezh)
+# bash <(wget -qO- https://is.gd/zhbrave)
 # 或下载后执行：
-# wget -O brave-zh.sh https://is.gd/bravezh
+# wget -O brave-zh.sh https://is.gd/zhbrave
 # bash brave-zh.sh
 # ==============================================
 set -e
