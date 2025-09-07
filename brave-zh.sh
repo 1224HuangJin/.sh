@@ -157,6 +157,7 @@ cat > ~/.local/share/applications/brave-browser-cn.desktop <<EOF
 [Desktop Entry]
 Version=1.0
 Name=$launcher_name
+Name[zh_CN]=$launcher_name
 Comment=使用中文语言启动 Brave 浏览器 (来自→ https://github.com/1224HuangJin/.sh/blob/main/brave-zh.sh )
 Exec=$exec_line
 Icon=brave-browser
@@ -165,18 +166,20 @@ Type=Application
 Categories=Network;WebBrowser;
 EOF
 
+# ====== 更新桌面数据库 ======
+log_info "🔄 更新桌面菜单缓存..."
+update-desktop-database ~/.local/share/applications/
+
 # ====== 隐藏原版启动器 ======
-log_info "😁 [6/6] 要不要隐藏系统自带的英文启动器？[y/N]"
-read -r hide_choice
-if [[ "$hide_choice" =~ ^[Yy]$ ]]; then
-  log_info "🤭 正在隐藏原版启动器..."
-  for f in /usr/share/applications/brave-browser.desktop /usr/share/applications/com.brave.Browser.desktop; do
-    if [[ -f "$f" ]]; then
-      sudo sed -i '/^NoDisplay=true/d' "$f"
-      echo "NoDisplay=true" | sudo tee -a "$f" > /dev/null
-    fi
-  done
-  log_info "😋 隐藏成功！菜单里就只剩你的中文启动器啦~"
+log_info "😁 [6/6] 隐藏系统自带英文启动器..."
+for f in /usr/share/applications/brave-browser.desktop /usr/share/applications/com.brave.Browser.desktop; do
+  if [[ -f "$f" ]]; then
+    sudo sed -i '/^NoDisplay=true/d' "$f"
+    echo "NoDisplay=true" | sudo tee -a "$f" > /dev/null
+  fi
+done
+log_info "😋 隐藏成功！菜单里就只剩你的中文启动器啦~"
+
 else
   log_warn "保留了原版启动器，菜单里会显示两个 Brave 浏览器哦。"
 fi
