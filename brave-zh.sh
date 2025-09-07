@@ -60,6 +60,7 @@ echo " - 缺点：速度慢，不稳定"
 echo " - 想要更安全的，还是 Tor 官方浏览器更靠谱"
 echo " - 关于Tor的文档：https://support.brave.app/hc/zh-tw/articles/7816553516045"
 echo "如有问题请联系: 1224huangjin@gmail.com 或在 https://github.com/1224HuangJin/.sh/ 发送一个Issues"
+echo "（2025.09.07）"
 echo
 
 read -p "准备好了吗？要继续安装 Brave 浏览器吗？(y/N): " confirm
