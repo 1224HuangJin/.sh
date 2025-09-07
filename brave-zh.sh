@@ -157,7 +157,7 @@ cat > ~/.local/share/applications/brave-browser-cn.desktop <<EOF
 [Desktop Entry]
 Version=1.0
 Name=$launcher_name
-Comment=使用中文语言启动 Brave 浏览器 (来自→ https://github.com/1224HuangJin/.sh/Brave-zh.sh )
+Comment=使用中文语言启动 Brave 浏览器 (来自→ https://github.com/1224HuangJin/.sh/blob/main/brave-zh.sh )
 Exec=$exec_line
 Icon=brave-browser
 Terminal=false
