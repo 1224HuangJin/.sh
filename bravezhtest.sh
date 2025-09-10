@@ -8,6 +8,7 @@
 # bash brave-zh.sh
 # ==============================================
 set -e
+set -e
 
 # ====== 彩色输出函数 ======
 GREEN="\e[32m"
@@ -28,7 +29,7 @@ fi
 log_info "✅ 网络正常，继续..."
 
 # ====== 检查 Brave 是否已安装 ======
-if command -v brave-browser >/dev/null 2>&1; then
+if command -v brave-browser >/dev/null 2>&1 || dpkg -l | grep -q brave-browser; then
   log_warn "⚠️ 检测到 Brave 已安装，将跳过安装步骤，仅设置中文启动器。"
   skip_install=true
 else
@@ -75,17 +76,18 @@ if [ "$skip_install" = false ]; then
 fi
 
 # ====== 添加 Brave 官方 GPG 密钥和软件源 ======
-log_info "🔐 添加 Brave 官方 GPG 密钥和软件源..."
-arch=$(dpkg --print-architecture)
+if [ "$skip_install" = false ]; then
+  log_info "🔐 添加 Brave 官方 GPG 密钥和软件源..."
+  arch=$(dpkg --print-architecture)
 
-if [[ ! -f /usr/share/keyrings/brave-browser-archive-keyring.gpg ]]; then
-  sudo curl --retry 3 -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
-    https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-fi
+  if [[ ! -f /usr/share/keyrings/brave-browser-archive-keyring.gpg ]]; then
+    sudo curl --retry 3 -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
+      https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+  fi
 
-if [[ ! -f /etc/apt/sources.list.d/brave-browser-release.sources ]] || \
-   ! grep -q "brave-browser-apt-release.s3.brave.com" /etc/apt/sources.list.d/brave-browser-release.sources; then
-  sudo tee /etc/apt/sources.list.d/brave-browser-release.sources > /dev/null <<EOF
+  if [[ ! -f /etc/apt/sources.list.d/brave-browser-release.sources ]] || \
+     ! grep -q "brave-browser-apt-release.s3.brave.com" /etc/apt/sources.list.d/brave-browser-release.sources; then
+    sudo tee /etc/apt/sources.list.d/brave-browser-release.sources > /dev/null <<EOF
 Types: deb
 URIs: https://brave-browser-apt-release.s3.brave.com/
 Suites: stable
@@ -93,6 +95,7 @@ Components: main
 Architectures: $arch
 Signed-By: /usr/share/keyrings/brave-browser-archive-keyring.gpg
 EOF
+  fi
 fi
 
 # ====== 安装 Brave 浏览器 ======
@@ -126,11 +129,7 @@ read -p "设置启动器名称（默认：Brave 浏览器）: " launcher_name
 launcher_name=${launcher_name:-"Brave 浏览器"}
 
 # 获取Brave可执行文件的实际路径
-brave_exec=$(which brave-browser)
-if [ -z "$brave_exec" ]; then
-  brave_exec="brave-browser"
-  log_warn "⚠️ 未找到brave-browser可执行文件，将使用通用命令"
-fi
+brave_exec=$(which brave-browser 2>/dev/null || echo "brave-browser")
 
 mkdir -p ~/.local/share/applications
 # 无论选择哪种语言设置，都强制使用中文启动
@@ -141,41 +140,73 @@ cat > ~/.local/share/applications/brave-browser-cn.desktop <<EOF
 Version=1.0
 Name=$launcher_name
 Name[zh_CN]=$launcher_name
-Comment=使用中文语言启动 Brave 浏览器 (来自→ https://github.com/1224HuangJin/.sh/blob/main/brave/zh.sh )
+GenericName=网页浏览器
+GenericName[zh_CN]=网页浏览器
+Comment=使用中文语言启动 Brave 浏览器
 Exec=$exec_line
 Icon=brave-browser
 Terminal=false
 Type=Application
 Categories=Network;WebBrowser;
 StartupWMClass=brave-browser
+Keywords=web;browser;internet;zh;chinese;
 EOF
 
 # ====== 更新桌面数据库 ======
-update-desktop-database ~/.local/share/applications/
+update-desktop-database ~/.local/share/applications/ 2>/dev/null || true
 
-# ====== 隐藏原版启动器 ======
-read -p "是否隐藏原版英文启动器？(y/N): " hide_choice
+# ====== 彻底隐藏所有原版启动器 ======
+log_info "🔍 正在查找并隐藏所有原版Brave启动器..."
+read -p "是否隐藏原版英文启动器？(Y/n): " hide_choice
+hide_choice=${hide_choice:-Y}
+
 if [[ "$hide_choice" =~ ^[Yy]$ ]]; then
-  # 查找所有可能的Brave启动器文件
-  find /usr/share/applications -name "*brave*.desktop" -o -name "*Brave*.desktop" | while read f; do
-    if [[ -f "$f" ]]; then
-      sudo sed -i '/^NoDisplay=true/d' "$f"
-      echo "NoDisplay=true" | sudo tee -a "$f" > /dev/null
+  # 查找所有可能的Brave启动器位置
+  declare -a brave_dirs=(
+    "/usr/share/applications"
+    "/var/lib/flatpak/exports/share/applications"
+    "$HOME/.local/share/flatpak/exports/share/applications"
+    "/var/lib/snapd/desktop/applications"
+    "$HOME/.local/share/applications"
+  )
+  
+  for dir in "${brave_dirs[@]}"; do
+    if [[ -d "$dir" ]]; then
+      find "$dir" -name "*brave*.desktop" -o -name "*Brave*.desktop" | while read -r f; do
+        # 跳过我们刚刚创建的中文启动器
+        if [[ "$f" != *"brave-browser-cn.desktop" ]]; then
+          log_info "隐藏启动器: $f"
+          sudo sed -i '/^NoDisplay=/d' "$f" 2>/dev/null || true
+          echo "NoDisplay=true" | sudo tee -a "$f" > /dev/null 2>/dev/null || \
+          echo "NoDisplay=true" | tee -a "$f" > /dev/null 2>/dev/null
+        fi
+      done
     fi
   done
   
-  # 检查Flatpak安装的Brave
-  if [ -d "/var/lib/flatpak/app/com.brave.Browser" ]; then
-    flatpak_launcher="$HOME/.local/share/applications/com.brave.Browser.desktop"
-    if [ -f "$flatpak_launcher" ]; then
-      sed -i '/^NoDisplay=true/d' "$flatpak_launcher"
-      echo "NoDisplay=true" | tee -a "$flatpak_launcher" > /dev/null
-    fi
-  fi
-  
-  log_info "😋 隐藏成功！菜单里只剩你的中文启动器~"
+  log_info "✅ 所有原版启动器已隐藏！"
 else
-  log_warn "保留原版启动器，菜单里会显示两个 Brave 浏览器。"
+  log_warn "保留原版启动器，菜单里会显示多个 Brave 浏览器。"
+fi
+
+# ====== 刷新桌面菜单 ======
+log_info "🔄 刷新桌面菜单..."
+if command -v xdg-desktop-menu >/dev/null 2>&1; then
+  xdg-desktop-menu forceupdate 2>/dev/null || true
+fi
+
+# 重启桌面环境（可选）
+read -p "是否立即重启桌面环境以使更改生效？(y/N): " restart_desktop
+if [[ "$restart_desktop" =~ ^[Yy]$ ]]; then
+  if [[ "$XDG_CURRENT_DESKTOP" == *"gnome"* ]] || [[ "$XDG_CURRENT_DESKTOP" == *"ubuntu"* ]]; then
+    log_info "正在重启GNOME桌面..."
+    gnome-session-quit --force || true
+  elif [[ "$XDG_CURRENT_DESKTOP" == *"kde"* ]]; then
+    log_info "正在重启KDE桌面..."
+    kquitapp5 plasmashell && kstart5 plasmashell || true
+  else
+    log_info "请手动注销并重新登录以使更改生效。"
+  fi
 fi
 
 # ====== 完成 ======
@@ -187,5 +218,10 @@ echo "  env LANG=zh_CN.UTF-8 brave-browser --lang=zh-CN"
 if [[ "$lang_choice" == "1" ]]; then
   log_info "🔄 您选择了修改系统语言，请注销或重启系统使更改完全生效。"
 fi
+
+log_info "💡 如果菜单中仍有多个Brave图标，请尝试："
+echo "  1. 完全注销并重新登录"
+echo "  2. 运行: killall gnome-panel 2>/dev/null || killall plasmashell 2>/dev/null"
+echo "  3. 或者重启计算机"
 
 exit 0
