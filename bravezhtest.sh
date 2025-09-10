@@ -1,6 +1,7 @@
 #!/bin/bash
 # ==============================================
-# Brave 浏览器一键安装脚本 (记得把一开始的#给弄掉、备用连接: https://raw.githubusercontent.com/1224HuangJin/.sh/main/brave/zh.sh)
+# Brave 浏览器一键安装脚本 (Chromebook 优化版)
+# 备用连接: https://raw.githubusercontent.com/1224HuangJin/.sh/main/brave/zh.sh
 # 快速运行方法：
 # bash <(wget -qO- https://is.gd/zhbrave)
 # 或下载后执行：
@@ -148,35 +149,96 @@ update-desktop-database ~/.local/share/applications/
 # ====== 隐藏原版启动器 ======
 read -p "是否隐藏原版英文启动器？(y/N): " hide_choice
 if [[ "$hide_choice" =~ ^[Yy]$ ]]; then
+  log_info "🔍 正在查找并隐藏所有原版Brave启动器..."
+  
   # 查找所有可能的Brave启动器位置
   declare -a brave_dirs=(
     "/usr/share/applications"
+    "/usr/local/share/applications"
     "/var/lib/flatpak/exports/share/applications"
     "$HOME/.local/share/flatpak/exports/share/applications"
     "/var/lib/snapd/desktop/applications"
+    "$HOME/.local/share/applications"
   )
   
+  # 查找并隐藏所有Brave启动器（除了我们创建的）
+  hidden_count=0
   for dir in "${brave_dirs[@]}"; do
     if [[ -d "$dir" ]]; then
-      find "$dir" -name "*brave*.desktop" -o -name "*Brave*.desktop" 2>/dev/null | while read -r f; do
-        # 跳过我们刚刚创建的中文启动器
+      while IFS= read -r -d '' f; do
+        # 跳过我们创建的中文启动器
         if [[ "$f" != *"brave-browser-cn.desktop" ]]; then
-          sudo sed -i '/^NoDisplay=/d' "$f" 2>/dev/null || true
-          echo "NoDisplay=true" | sudo tee -a "$f" > /dev/null 2>/dev/null || \
-          echo "NoDisplay=true" | tee -a "$f" > /dev/null 2>/dev/null
+          # 尝试使用sudo修改，如果失败则使用当前用户权限
+          if sudo test -w "$f"; then
+            sudo sed -i '/^NoDisplay=/d' "$f" 2>/dev/null || true
+            echo "NoDisplay=true" | sudo tee -a "$f" >/dev/null 2>/dev/null
+          else
+            sed -i '/^NoDisplay=/d' "$f" 2>/dev/null || true
+            echo "NoDisplay=true" | tee -a "$f" >/dev/null 2>/dev/null
+          fi
+          log_info "已隐藏: $f"
+          ((hidden_count++))
         fi
-      done
+      done < <(find "$dir" -name "*brave*.desktop" -o -name "*Brave*.desktop" -print0 2>/dev/null)
     fi
   done
   
-  log_info "😋 隐藏成功！菜单里只剩你的中文启动器~"
+  # 额外处理可能的Snap版本
+  if command -v snap >/dev/null 2>&1; then
+    if snap list | grep -q brave; then
+      while IFS= read -r -d '' f; do
+        if [[ -f "$f" ]]; then
+          sed -i '/^NoDisplay=/d' "$f" 2>/dev/null
+          echo "NoDisplay=true" | tee -a "$f" >/dev/null 2>/dev/null
+          log_info "已隐藏Snap版: $f"
+          ((hidden_count++))
+        fi
+      done < <(find "$HOME/.local/share/applications" -name "snap*brave*.desktop" -print0 2>/dev/null)
+    fi
+  fi
+  
+  if [ $hidden_count -gt 0 ]; then
+    log_info "😋 成功隐藏了 $hidden_count 个原版启动器！菜单里应该只剩你的中文启动器~"
+  else
+    log_warn "⚠️ 没有找到需要隐藏的原版启动器。"
+  fi
 else
-  log_warn "保留原版启动器，菜单里会显示两个 Brave 浏览器。"
+  log_warn "保留原版启动器，菜单里会显示多个 Brave 浏览器。"
 fi
+
+# ====== 强制刷新桌面菜单 (Chromebook 专用) ======
+log_info "🔄 强制刷新桌面菜单..."
+if command -v xdg-desktop-menu >/dev/null 2>&1; then
+  xdg-desktop-menu forceupdate 2>/dev/null || true
+fi
+
+# Chromebook 专用桌面刷新方法
+log_info "📱 Chromebook 专用提示:"
+echo "  如果您使用的是 Chromebook Linux 容器，可能需要以下操作:"
+echo "  1. 点击屏幕右下角的时间区域"
+echo "  2. 点击设置图标(齿轮形状)"
+echo "  3. 在左侧菜单中找到 '应用'"
+echo "  4. 点击右上角的『刷新』按钮"
+echo "  5. 或者完全退出 Linux 容器并重新启动"
 
 # ====== 完成 ======
 log_info "🎉 完成！可以在菜单找到 \"$launcher_name\"，开心地用中文启动啦！"
 log_info "🧑‍💻 命令行备用启动："
 echo "  env LANG=zh_CN.UTF-8 brave-browser --lang=zh-CN"
+
+log_info "💡 如果菜单中仍有多个Brave图标，请尝试："
+echo "  1. 完全注销并重新登录"
+echo "  2. 在 Chromebook 上: 完全退出 Linux 容器并重新启动"
+echo "  3. 运行: killall gnome-panel 2>/dev/null || killall plasmashell 2>/dev/null"
+echo "  4. 或者重启计算机"
+
+# 添加重置桌面的具体指导
+echo
+log_info "🔄 重置 Linux 桌面环境的方法:"
+echo "  对于 Chromebook 的 Linux 容器:"
+echo "  1. 右键点击终端图标"
+echo "  2. 选择『关闭 Linux』"
+echo "  3. 等待几秒钟后重新启用 Linux"
+echo "  4. 或者重启整个 Chromebook"
 
 exit 0
